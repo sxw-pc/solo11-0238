@@ -1,0 +1,111 @@
+{
+  "name": "路径-例外窗口",
+  "steps": [
+    {
+      "subsystem": "policy",
+      "operation": "create",
+      "request_id": "path-ex:create",
+      "payload": {
+        "policy_id": "p1",
+        "namespace": "edge",
+        "scope": "api",
+        "owner": "platform"
+      }
+    },
+    {
+      "subsystem": "policy",
+      "operation": "draft",
+      "request_id": "path-ex:draft",
+      "payload": {
+        "policy_id": "p1",
+        "revision": 1,
+        "value": "safe",
+        "dependencies": [],
+        "at": 1
+      }
+    },
+    {
+      "subsystem": "policy",
+      "operation": "publish",
+      "request_id": "path-ex:publish",
+      "payload": {
+        "policy_id": "p1",
+        "revision": 1
+      }
+    },
+    {
+      "subsystem": "agent",
+      "operation": "register",
+      "request_id": "path-ex:register",
+      "payload": {
+        "replica_id": "r1",
+        "service": "api",
+        "namespace": "edge",
+        "generation": 1,
+        "healthy": true
+      }
+    },
+    {
+      "subsystem": "agent",
+      "operation": "observe",
+      "request_id": "path-ex:observe",
+      "payload": {
+        "observation_id": "path-ex:obs",
+        "replica_id": "r1",
+        "generation": 1,
+        "observed_at": 5,
+        "received_at": 6,
+        "policy_id": "p1",
+        "revision": 1,
+        "value": "custom",
+        "origin": "agent"
+      }
+    },
+    {
+      "subsystem": "agent",
+      "operation": "exception",
+      "request_id": "path-ex:grant",
+      "payload": {
+        "exception_id": "ex1",
+        "replica_id": "r1",
+        "policy_id": "p1",
+        "approved_by": "service-owner",
+        "expires_at": 20,
+        "at": 10,
+        "reason": "approved operational deviation"
+      }
+    },
+    {
+      "subsystem": "drift",
+      "operation": "plan",
+      "request_id": "path-ex:skip",
+      "payload": {
+        "plan_id": "during",
+        "policy_id": "p1",
+        "service": "api",
+        "min_healthy": 0,
+        "at": 11
+      }
+    },
+    {
+      "subsystem": "agent",
+      "operation": "expire",
+      "request_id": "path-ex:expire",
+      "payload": {
+        "at": 20
+      }
+    },
+    {
+      "subsystem": "drift",
+      "operation": "plan",
+      "request_id": "path-ex:resume",
+      "payload": {
+        "plan_id": "after",
+        "policy_id": "p1",
+        "service": "api",
+        "min_healthy": 0,
+        "at": 21
+      }
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "name": "策略发布-normal",
+  "steps": [
+    {
+      "subsystem": "policy",
+      "operation": "create",
+      "request_id": "pn:create",
+      "payload": {
+        "policy_id": "p1",
+        "namespace": "edge",
+        "scope": "api",
+        "owner": "platform"
+      }
+    },
+    {
+      "subsystem": "policy",
+      "operation": "draft",
+      "request_id": "pn:draft",
+      "payload": {
+        "policy_id": "p1",
+        "revision": 1,
+        "value": "safe",
+        "dependencies": [],
+        "at": 1
+      }
+    },
+    {
+      "subsystem": "policy",
+      "operation": "publish",
+      "request_id": "pn:publish",
+      "payload": {
+        "policy_id": "p1",
+        "revision": 1
+      }
+    },
+    {
+      "subsystem": "policy",
+      "operation": "draft",
+      "request_id": "pn:draft2",
+      "payload": {
+        "policy_id": "p1",
+        "revision": 2,
+        "value": "hardened",
+        "dependencies": [],
+        "at": 10
+      }
+    },
+    {
+      "subsystem": "policy",
+      "operation": "publish",
+      "request_id": "pn:publish2",
+      "payload": {
+        "policy_id": "p1",
+        "revision": 2
+      }
+    },
+    {
+      "subsystem": "policy",
+      "operation": "rollback",
+      "request_id": "pn:rollback",
+      "payload": {
+        "policy_id": "p1",
+        "source_revision": 1,
+        "at": 15
+      }
+    }
+  ]
+}

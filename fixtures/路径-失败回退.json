@@ -1,0 +1,131 @@
+{
+  "name": "路径-失败回退",
+  "steps": [
+    {
+      "subsystem": "policy",
+      "operation": "create",
+      "request_id": "path-rb:create",
+      "payload": {
+        "policy_id": "p1",
+        "namespace": "edge",
+        "scope": "api",
+        "owner": "platform"
+      }
+    },
+    {
+      "subsystem": "policy",
+      "operation": "draft",
+      "request_id": "path-rb:draft",
+      "payload": {
+        "policy_id": "p1",
+        "revision": 1,
+        "value": "safe",
+        "dependencies": [],
+        "at": 1
+      }
+    },
+    {
+      "subsystem": "policy",
+      "operation": "publish",
+      "request_id": "path-rb:publish",
+      "payload": {
+        "policy_id": "p1",
+        "revision": 1
+      }
+    },
+    {
+      "subsystem": "agent",
+      "operation": "register",
+      "request_id": "path-rb:register",
+      "payload": {
+        "replica_id": "r1",
+        "service": "api",
+        "namespace": "edge",
+        "generation": 1,
+        "healthy": true
+      }
+    },
+    {
+      "subsystem": "agent",
+      "operation": "observe",
+      "request_id": "path-rb:observe",
+      "payload": {
+        "observation_id": "path-rb:obs",
+        "replica_id": "r1",
+        "generation": 1,
+        "observed_at": 5,
+        "received_at": 6,
+        "policy_id": "p1",
+        "revision": 0,
+        "value": "old",
+        "origin": "agent"
+      }
+    },
+    {
+      "subsystem": "policy",
+      "operation": "draft",
+      "request_id": "path-rb:draft2",
+      "payload": {
+        "policy_id": "p1",
+        "revision": 2,
+        "value": "strict",
+        "dependencies": [],
+        "at": 7
+      }
+    },
+    {
+      "subsystem": "policy",
+      "operation": "publish",
+      "request_id": "path-rb:publish2",
+      "payload": {
+        "policy_id": "p1",
+        "revision": 2
+      }
+    },
+    {
+      "subsystem": "drift",
+      "operation": "plan",
+      "request_id": "path-rb:plan",
+      "payload": {
+        "plan_id": "fix1",
+        "policy_id": "p1",
+        "service": "api",
+        "min_healthy": 0,
+        "at": 10
+      }
+    },
+    {
+      "subsystem": "drift",
+      "operation": "dispatch",
+      "request_id": "path-rb:dispatch",
+      "payload": {
+        "action_id": "fix1:r1"
+      }
+    },
+    {
+      "subsystem": "drift",
+      "operation": "receipt",
+      "request_id": "path-rb:failed",
+      "payload": {
+        "receipt_id": "failed1",
+        "action_id": "fix1:r1",
+        "replica_id": "r1",
+        "generation": 1,
+        "revision": 2,
+        "value": "strict",
+        "at": 11,
+        "success": false
+      }
+    },
+    {
+      "subsystem": "drift",
+      "operation": "rollback",
+      "request_id": "path-rb:rollback",
+      "payload": {
+        "plan_id": "fix1",
+        "source_revision": 1,
+        "at": 12
+      }
+    }
+  ]
+}

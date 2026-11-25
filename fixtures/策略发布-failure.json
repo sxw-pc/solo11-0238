@@ -1,0 +1,48 @@
+{
+  "name": "策略发布-failure",
+  "steps": [
+    {
+      "subsystem": "policy",
+      "operation": "create",
+      "request_id": "pf:create",
+      "payload": {
+        "policy_id": "p1",
+        "namespace": "edge",
+        "scope": "api",
+        "owner": "team-a"
+      }
+    },
+    {
+      "subsystem": "policy",
+      "operation": "draft",
+      "request_id": "pf:draft",
+      "payload": {
+        "policy_id": "p1",
+        "revision": 1,
+        "value": "safe",
+        "dependencies": [
+          "missing"
+        ],
+        "at": 1
+      }
+    },
+    {
+      "subsystem": "policy",
+      "operation": "publish",
+      "request_id": "pf:blocked",
+      "payload": {
+        "policy_id": "p1",
+        "revision": 1
+      }
+    },
+    {
+      "subsystem": "policy",
+      "operation": "retire",
+      "request_id": "pf:retire",
+      "payload": {
+        "policy_id": "p1",
+        "at": 10
+      }
+    }
+  ]
+}
