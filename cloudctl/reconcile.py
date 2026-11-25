@@ -186,5 +186,5 @@ def inspect(connection, payload):
                                   "WHERE a.plan_id=? ORDER BY r.observed_at", (plan_id,)))
 
 
-HANDLERS = {"plan": plan, "dispatch": dispatch, "receipt": receive,
+HANDLERS = {"plan": plan, "reconcile": plan, "dispatch": dispatch, "receipt": receive,
             "confirm": confirm, "rollback": rollback, "inspect": inspect}

@@ -1,0 +1,132 @@
+{
+  "name": "修复执行-normal",
+  "steps": [
+    {
+      "subsystem": "policy",
+      "operation": "create",
+      "request_id": "dn:create",
+      "payload": {
+        "policy_id": "p1",
+        "namespace": "edge",
+        "scope": "api",
+        "owner": "platform"
+      }
+    },
+    {
+      "subsystem": "policy",
+      "operation": "draft",
+      "request_id": "dn:draft",
+      "payload": {
+        "policy_id": "p1",
+        "revision": 1,
+        "value": "safe",
+        "dependencies": [],
+        "at": 1
+      }
+    },
+    {
+      "subsystem": "policy",
+      "operation": "publish",
+      "request_id": "dn:publish",
+      "payload": {
+        "policy_id": "p1",
+        "revision": 1
+      }
+    },
+    {
+      "subsystem": "agent",
+      "operation": "register",
+      "request_id": "dn:register",
+      "payload": {
+        "replica_id": "r1",
+        "service": "api",
+        "namespace": "edge",
+        "generation": 1,
+        "healthy": true
+      }
+    },
+    {
+      "subsystem": "agent",
+      "operation": "observe",
+      "request_id": "dn:observe",
+      "payload": {
+        "observation_id": "dn:obs",
+        "replica_id": "r1",
+        "generation": 1,
+        "observed_at": 5,
+        "received_at": 6,
+        "policy_id": "p1",
+        "revision": 0,
+        "value": "old",
+        "origin": "agent"
+      }
+    },
+    {
+      "subsystem": "drift",
+      "operation": "reconcile",
+      "request_id": "dn:plan",
+      "payload": {
+        "plan_id": "fix1",
+        "policy_id": "p1",
+        "service": "api",
+        "min_healthy": 0,
+        "at": 10
+      }
+    },
+    {
+      "subsystem": "drift",
+      "operation": "dispatch",
+      "request_id": "dn:dispatch",
+      "payload": {
+        "action_id": "fix1:r1"
+      }
+    },
+    {
+      "subsystem": "drift",
+      "operation": "receipt",
+      "request_id": "dn:receipt",
+      "payload": {
+        "receipt_id": "rec1",
+        "action_id": "fix1:r1",
+        "replica_id": "r1",
+        "generation": 1,
+        "revision": 1,
+        "value": "safe",
+        "at": 11,
+        "success": true
+      }
+    },
+    {
+      "subsystem": "drift",
+      "operation": "confirm",
+      "request_id": "dn:premature",
+      "payload": {
+        "action_id": "fix1:r1"
+      }
+    },
+    {
+      "subsystem": "agent",
+      "operation": "observe",
+      "request_id": "dn:observed",
+      "payload": {
+        "observation_id": "dn:fixed",
+        "replica_id": "r1",
+        "generation": 1,
+        "observed_at": 12,
+        "received_at": 13,
+        "policy_id": "p1",
+        "revision": 1,
+        "value": "safe",
+        "origin": "agent"
+      }
+    },
+    {
+      "subsystem": "drift",
+      "operation": "confirm",
+      "request_id": "dn:confirm",
+      "payload": {
+        "action_id": "fix1:r1"
+      }
+    }
+  ]
+}

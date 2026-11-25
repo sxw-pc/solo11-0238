@@ -127,3 +127,11 @@ save("路径-失败回退.json", foundation("path-rb") + replica("path-rb") + [
          replica_id="r1", generation=1, revision=2, value="strict", at=11, success=False),
     step("drift", "rollback", "path-rb:rollback", plan_id="fix1", source_revision=1, at=12),
 ])
+for name in ("策略发布", "副本观察", "修复执行"):
+    scenario = json.loads((HERE / f"{name}-normal.json").read_text(encoding="utf-8"))
+    if name == "修复执行":
+        for action in scenario["steps"]:
+            if action["subsystem"] == "drift" and action["operation"] == "plan":
+                action["operation"] = "reconcile"
+    (HERE / f"{name}.json").write_text(
+        json.dumps(scenario, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

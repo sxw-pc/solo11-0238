@@ -89,6 +89,17 @@ class VerticalPaths(Workspace):
                     self.assertEqual(result["audit"]["audit"], "consistent")
                     db.close()
 
+    def test_review_promised_subsystem_entry_fixtures_exist(self):
+        for name, subsystem, operation in (("策略发布", "policy", "publish"),
+                                           ("副本观察", "agent", "observe"),
+                                           ("修复执行", "drift", "reconcile")):
+            with self.subTest(subsystem=subsystem):
+                path = FIXTURES / f"{name}.json"
+                self.assertTrue(path.exists())
+                scenario = json.loads(path.read_text(encoding="utf-8"))
+                self.assertTrue(any(step["subsystem"] == subsystem and step["operation"] == operation
+                                    for step in scenario["steps"]))
+
 
 if __name__ == "__main__":
     unittest.main()

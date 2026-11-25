@@ -1,0 +1,103 @@
+{
+  "name": "副本观察-normal",
+  "steps": [
+    {
+      "subsystem": "policy",
+      "operation": "create",
+      "request_id": "an:create",
+      "payload": {
+        "policy_id": "p1",
+        "namespace": "edge",
+        "scope": "api",
+        "owner": "platform"
+      }
+    },
+    {
+      "subsystem": "policy",
+      "operation": "draft",
+      "request_id": "an:draft",
+      "payload": {
+        "policy_id": "p1",
+        "revision": 1,
+        "value": "safe",
+        "dependencies": [],
+        "at": 1
+      }
+    },
+    {
+      "subsystem": "policy",
+      "operation": "publish",
+      "request_id": "an:publish",
+      "payload": {
+        "policy_id": "p1",
+        "revision": 1
+      }
+    },
+    {
+      "subsystem": "agent",
+      "operation": "register",
+      "request_id": "an:register",
+      "payload": {
+        "replica_id": "r1",
+        "service": "api",
+        "namespace": "edge",
+        "generation": 1,
+        "healthy": true
+      }
+    },
+    {
+      "subsystem": "agent",
+      "operation": "observe",
+      "request_id": "an:observe",
+      "payload": {
+        "observation_id": "an:obs",
+        "replica_id": "r1",
+        "generation": 1,
+        "observed_at": 5,
+        "received_at": 6,
+        "policy_id": "p1",
+        "revision": 1,
+        "value": "manual",
+        "origin": "agent"
+      }
+    },
+    {
+      "subsystem": "agent",
+      "operation": "exception",
+      "request_id": "an:exception",
+      "payload": {
+        "exception_id": "ex1",
+        "replica_id": "r1",
+        "policy_id": "p1",
+        "approved_by": "service-owner",
+        "expires_at": 15,
+        "at": 8,
+        "reason": "emergency hotfix"
+      }
+    },
+    {
+      "subsystem": "agent",
+      "operation": "expire",
+      "request_id": "an:expire",
+      "payload": {
+        "at": 16
+      }
+    },
+    {
+      "subsystem": "agent",
+      "operation": "observe",
+      "request_id": "an:fixed",
+      "payload": {
+        "observation_id": "an:fixed-observation",
+        "replica_id": "r1",
+        "generation": 1,
+        "observed_at": 17,
+        "received_at": 18,
+        "policy_id": "p1",
+        "revision": 1,
+        "value": "safe",
+        "origin": "agent"
+      }
+    }
+  ]
+}
