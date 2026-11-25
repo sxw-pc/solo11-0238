@@ -3,3 +3,12 @@ __pycache__/
 *.sqlite
 *.sqlite-shm
 *.sqlite-wal
+.venv/
+venv/
+node_modules/
+*.pyc
+.pytest_cache/
+.coverage
+.benchmarks/
+.env
+dist/
