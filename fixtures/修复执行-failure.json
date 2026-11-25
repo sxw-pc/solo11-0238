@@ -1,0 +1,108 @@
+{
+  "name": "修复执行-failure",
+  "steps": [
+    {
+      "subsystem": "policy",
+      "operation": "create",
+      "request_id": "df:create",
+      "payload": {
+        "policy_id": "p1",
+        "namespace": "edge",
+        "scope": "api",
+        "owner": "platform"
+      }
+    },
+    {
+      "subsystem": "policy",
+      "operation": "draft",
+      "request_id": "df:draft",
+      "payload": {
+        "policy_id": "p1",
+        "revision": 1,
+        "value": "safe",
+        "dependencies": [],
+        "at": 1
+      }
+    },
+    {
+      "subsystem": "policy",
+      "operation": "publish",
+      "request_id": "df:publish",
+      "payload": {
+        "policy_id": "p1",
+        "revision": 1
+      }
+    },
+    {
+      "subsystem": "agent",
+      "operation": "register",
+      "request_id": "df:register",
+      "payload": {
+        "replica_id": "r1",
+        "service": "api",
+        "namespace": "edge",
+        "generation": 1,
+        "healthy": true
+      }
+    },
+    {
+      "subsystem": "agent",
+      "operation": "observe",
+      "request_id": "df:observe",
+      "payload": {
+        "observation_id": "df:obs",
+        "replica_id": "r1",
+        "generation": 1,
+        "observed_at": 5,
+        "received_at": 6,
+        "policy_id": "p1",
+        "revision": 0,
+        "value": "old",
+        "origin": "agent"
+      }
+    },
+    {
+      "subsystem": "drift",
+      "operation": "plan",
+      "request_id": "df:plan",
+      "payload": {
+        "plan_id": "fix1",
+        "policy_id": "p1",
+        "service": "api",
+        "min_healthy": 0,
+        "at": 10
+      }
+    },
+    {
+      "subsystem": "drift",
+      "operation": "dispatch",
+      "request_id": "df:dispatch",
+      "payload": {
+        "action_id": "fix1:r1"
+      }
+    },
+    {
+      "subsystem": "drift",
+      "operation": "receipt",
+      "request_id": "df:bad",
+      "payload": {
+        "receipt_id": "bad1",
+        "action_id": "fix1:r1",
+        "replica_id": "r1",
+        "generation": 0,
+        "revision": 1,
+        "value": "safe",
+        "at": 11,
+        "success": true
+      }
+    },
+    {
+      "subsystem": "drift",
+      "operation": "dispatch",
+      "request_id": "df:retry",
+      "payload": {
+        "action_id": "fix1:r1"
+      }
+    }
+  ]
+}

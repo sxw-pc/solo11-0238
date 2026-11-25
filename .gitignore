@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+.venv/
+venv/
+node_modules/
+*.pyc
+.pytest_cache/
+.coverage
+.benchmarks/
+.env
+dist/
