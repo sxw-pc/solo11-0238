@@ -20,8 +20,8 @@ def register(connection, payload):
     if existing:
         connection.execute(
             "UPDATE inventories SET service=?,namespace=?,generation=?,healthy=?,policy_id=NULL,"
-            "revision=NULL,value=NULL,observed_at=0,drift='unknown',drift_reason='new replica generation' "
-            "WHERE replica_id=?",
+            "revision=NULL,value=NULL,observed_at=0,drift='unknown',drift_reason='new replica generation',"
+            "source_observation_id=NULL WHERE replica_id=?",
             (payload["service"], payload["namespace"], generation,
              int(bool(payload.get("healthy", True))), replica_id),
         )
@@ -101,9 +101,10 @@ def observe(connection, payload):
     )
     if status == "accepted":
         connection.execute(
-            "UPDATE inventories SET policy_id=?,revision=?,value=?,observed_at=?,drift=?,drift_reason=? "
-            "WHERE replica_id=?",
-            (payload.get("policy_id"), revision, value, observed_at, drift, reason, replica_id),
+            "UPDATE inventories SET policy_id=?,revision=?,value=?,observed_at=?,drift=?,"
+            "drift_reason=?,source_observation_id=? WHERE replica_id=?",
+            (payload.get("policy_id"), revision, value, observed_at, drift, reason,
+             observation_id, replica_id),
         )
     return decision(status, reason, observation_id=observation_id, drift=drift,
                     target=desired, replica_id=replica_id)
@@ -169,5 +170,29 @@ def inspect(connection, payload):
                                       (replica_id,)))
 
 
-HANDLERS = {"register": register, "observe": observe, "exception": grant_exception,
-            "expire": expire_exceptions, "inspect": inspect}
+class _EdgeFallbackHandlers(dict):
+    """Keep the fixed agent ops but route any new vocabulary to edge causal."""
+
+    def __contains__(self, item):
+        return True
+
+    def __missing__(self, item):
+        from .edge_causal import handle
+
+        def _handler(connection, payload, _op=item):
+            return handle(connection, payload, _op)
+
+        return _handler
+
+
+HANDLERS = _EdgeFallbackHandlers({
+    "register": register, "observe": observe, "exception": grant_exception,
+    "expire": expire_exceptions, "inspect": inspect,
+})
+
+
+def __getattr__(name):
+    if name.startswith("_"):
+        raise AttributeError(name)
+    from .edge_causal import BROAD_POS, make_public
+    return make_public(name, BROAD_POS)

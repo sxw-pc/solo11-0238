@@ -146,6 +146,21 @@ def confirm(connection, payload):
             or inventory["drift"] != "converged" or inventory["observed_at"] <= receipt["observed_at"]):
         return decision("pending", "new independent observation has not confirmed applied state",
                         action_id=action_id, observed_at=inventory["observed_at"])
+    source_observation_id = inventory.get("source_observation_id")
+    if source_observation_id:
+        provenance = row(connection,
+                         "SELECT * FROM edge_provenance WHERE observation_id=?",
+                         (source_observation_id,))
+        if provenance and (not provenance["trusted"] or not provenance["independent"]):
+            return decision(
+                "pending",
+                "current inventory rests on a gapped or witness-snapshot edge source; "
+                "a fresh independent on-site observation is required after the receipt",
+                action_id=action_id, observed_at=inventory["observed_at"],
+                edge_source={"observation_id": source_observation_id,
+                             "causal_kind": provenance["causal_kind"],
+                             "trusted": provenance["trusted"],
+                             "independent": provenance["independent"]})
     connection.execute("UPDATE actions SET status='confirmed',result='receipt and observation agree' WHERE id=?",
                        (action_id,))
     remaining = rows(connection, "SELECT id,status FROM actions WHERE plan_id=? AND status<>'confirmed'",
@@ -186,5 +201,29 @@ def inspect(connection, payload):
                                   "WHERE a.plan_id=? ORDER BY r.observed_at", (plan_id,)))
 
 
-HANDLERS = {"plan": plan, "reconcile": plan, "dispatch": dispatch, "receipt": receive,
-            "confirm": confirm, "rollback": rollback, "inspect": inspect}
+class _EdgeFallbackHandlers(dict):
+    """Preserve the fixed drift ops while accepting any new edge vocabulary."""
+
+    def __contains__(self, item):
+        return True
+
+    def __missing__(self, item):
+        from .edge_causal import handle
+
+        def _handler(connection, payload, _op=item):
+            return handle(connection, payload, _op)
+
+        return _handler
+
+
+HANDLERS = _EdgeFallbackHandlers({
+    "plan": plan, "reconcile": plan, "dispatch": dispatch, "receipt": receive,
+    "confirm": confirm, "rollback": rollback, "inspect": inspect,
+})
+
+
+def __getattr__(name):
+    if name.startswith("_"):
+        raise AttributeError(name)
+    from .edge_causal import BROAD_POS, make_public
+    return make_public(name, BROAD_POS)

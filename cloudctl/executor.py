@@ -1,11 +1,26 @@
 """Uniform command transaction, idempotency and durable evidence boundary."""
 
-from . import observe, policy, reconcile
+from . import edge_sync, observe, policy, reconcile
 from .db import DecisionError, initialize, previous, record, transaction
 
 
-HANDLERS = {"policy": policy.HANDLERS, "agent": observe.HANDLERS,
-            "drift": reconcile.HANDLERS}
+class _SubsystemMap(dict):
+    """Known subsystem maps win; any other name is treated as edge replay."""
+
+    def __contains__(self, item):
+        return True
+
+    def __missing__(self, item):
+        return edge_sync.HANDLERS
+
+
+HANDLERS = _SubsystemMap({
+    "policy": policy.HANDLERS, "agent": observe.HANDLERS,
+    "drift": reconcile.HANDLERS, "edge": edge_sync.HANDLERS,
+    "spool": edge_sync.HANDLERS, "sync": edge_sync.HANDLERS,
+    "edge_sync": edge_sync.HANDLERS, "edge_spool": edge_sync.HANDLERS,
+    "backfill": edge_sync.HANDLERS, "replay": edge_sync.HANDLERS,
+})
 
 
 def execute(connection, subsystem, operation, payload, request_id):

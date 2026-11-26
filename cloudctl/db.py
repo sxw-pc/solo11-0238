@@ -26,7 +26,8 @@ CREATE TABLE IF NOT EXISTS inventories (
   replica_id TEXT PRIMARY KEY, service TEXT NOT NULL, namespace TEXT NOT NULL,
   generation INTEGER NOT NULL, healthy INTEGER NOT NULL,
   policy_id TEXT, revision INTEGER, value TEXT, observed_at INTEGER NOT NULL DEFAULT 0,
-  drift TEXT NOT NULL DEFAULT 'unknown', drift_reason TEXT NOT NULL DEFAULT ''
+  drift TEXT NOT NULL DEFAULT 'unknown', drift_reason TEXT NOT NULL DEFAULT '',
+  source_observation_id TEXT
 );
 CREATE TABLE IF NOT EXISTS observations (
   id TEXT PRIMARY KEY, replica_id TEXT NOT NULL REFERENCES inventories(replica_id),
@@ -56,6 +57,57 @@ CREATE TABLE IF NOT EXISTS receipts (
   id TEXT PRIMARY KEY, action_id TEXT NOT NULL REFERENCES actions(id),
   replica_id TEXT NOT NULL, generation INTEGER NOT NULL, revision INTEGER NOT NULL,
   value TEXT NOT NULL, observed_at INTEGER NOT NULL, status TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS edge_pages (
+  page TEXT PRIMARY KEY, digest TEXT, rows_json TEXT,
+  node TEXT, boot_generation INTEGER, seq INTEGER, prev_digest TEXT,
+  sampled_at INTEGER, observed_at INTEGER, received_at INTEGER,
+  status TEXT, source TEXT, meta_json TEXT
+);
+CREATE TABLE IF NOT EXISTS edge_checkpoints (
+  subject TEXT, metric INTEGER,
+  node TEXT, boot_generation INTEGER, seq INTEGER, kind TEXT,
+  seal TEXT, at INTEGER
+);
+CREATE TABLE IF NOT EXISTS edge_page_records (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  node TEXT NOT NULL, boot_generation INTEGER, seq INTEGER,
+  page_key TEXT, digest TEXT NOT NULL, prev_digest TEXT,
+  records_json TEXT NOT NULL DEFAULT '[]',
+  sampled_at INTEGER, received_at INTEGER NOT NULL DEFAULT 0,
+  origin TEXT NOT NULL DEFAULT 'edge', source TEXT NOT NULL DEFAULT 'spool',
+  independent INTEGER, link_ok INTEGER NOT NULL DEFAULT 0,
+  chain_ok INTEGER NOT NULL DEFAULT 0, status TEXT NOT NULL DEFAULT 'stored',
+  projected INTEGER NOT NULL DEFAULT 0, observation_ids TEXT NOT NULL DEFAULT '[]',
+  UNIQUE(node, boot_generation, seq, digest)
+);
+CREATE TABLE IF NOT EXISTS edge_generations (
+  node TEXT NOT NULL, boot_generation INTEGER NOT NULL,
+  anchor_seq INTEGER NOT NULL DEFAULT 0, anchor_digest TEXT,
+  tip_seq INTEGER NOT NULL DEFAULT 0, tip_digest TEXT, forked_seq INTEGER,
+  trust TEXT NOT NULL DEFAULT 'unbound', status TEXT NOT NULL DEFAULT 'open',
+  PRIMARY KEY(node, boot_generation)
+);
+CREATE TABLE IF NOT EXISTS edge_handoffs (
+  id TEXT PRIMARY KEY, node TEXT, from_generation INTEGER, to_generation INTEGER,
+  seal TEXT, kind TEXT, authority TEXT, valid INTEGER NOT NULL DEFAULT 1,
+  event_at INTEGER, received_at INTEGER, payload_json TEXT
+);
+CREATE TABLE IF NOT EXISTS edge_snapshots (
+  id TEXT PRIMARY KEY, node TEXT, boot_generation INTEGER, seq INTEGER,
+  digest TEXT, state_json TEXT, witnesses_json TEXT, witness_count INTEGER,
+  gap_proof TEXT, gaps_json TEXT, event_at INTEGER, received_at INTEGER,
+  valid INTEGER NOT NULL DEFAULT 1, establishes_seq INTEGER
+);
+CREATE TABLE IF NOT EXISTS edge_watermarks (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  node TEXT, boot_generation INTEGER, seq INTEGER, causal_order INTEGER,
+  kind TEXT, ref_id TEXT, seal TEXT, at INTEGER, metric INTEGER
+);
+CREATE TABLE IF NOT EXISTS edge_provenance (
+  observation_id TEXT PRIMARY KEY, replica_id TEXT, node TEXT,
+  boot_generation INTEGER, seq INTEGER, causal_kind TEXT,
+  trusted INTEGER, independent INTEGER, sampled_at INTEGER
 );
 CREATE TABLE IF NOT EXISTS events (
   id INTEGER PRIMARY KEY AUTOINCREMENT, request_id TEXT NOT NULL UNIQUE,
