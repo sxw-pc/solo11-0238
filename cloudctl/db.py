@@ -57,6 +57,30 @@ CREATE TABLE IF NOT EXISTS receipts (
   replica_id TEXT NOT NULL, generation INTEGER NOT NULL, revision INTEGER NOT NULL,
   value TEXT NOT NULL, observed_at INTEGER NOT NULL, status TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS rotations (
+  rotation_id TEXT PRIMARY KEY, service TEXT NOT NULL, namespace TEXT NOT NULL,
+  old_key_id TEXT NOT NULL, new_key_id TEXT NOT NULL, min_serving INTEGER NOT NULL,
+  revoke_deadline INTEGER NOT NULL, suspected_compromise INTEGER NOT NULL DEFAULT 0,
+  status TEXT NOT NULL DEFAULT 'active', created_at INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS rotation_commands (
+  id TEXT PRIMARY KEY, rotation_id TEXT NOT NULL, kind TEXT NOT NULL,
+  replica_id TEXT, key_id TEXT, status TEXT NOT NULL, detail TEXT NOT NULL,
+  created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS key_trust_ledger (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, rotation_id TEXT NOT NULL, key_id TEXT NOT NULL,
+  change TEXT NOT NULL, at INTEGER NOT NULL, command_id TEXT
+);
+CREATE TABLE IF NOT EXISTS activation_ledger (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, rotation_id TEXT NOT NULL, replica_id TEXT NOT NULL,
+  key_id TEXT NOT NULL, generation INTEGER NOT NULL, at INTEGER NOT NULL,
+  source TEXT NOT NULL, command_id TEXT
+);
+CREATE TABLE IF NOT EXISTS routing_ledger (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, rotation_id TEXT NOT NULL, replica_id TEXT NOT NULL,
+  action TEXT NOT NULL, at INTEGER NOT NULL, command_id TEXT
+);
 CREATE TABLE IF NOT EXISTS events (
   id INTEGER PRIMARY KEY AUTOINCREMENT, request_id TEXT NOT NULL UNIQUE,
   kind TEXT NOT NULL, subject TEXT NOT NULL, input_json TEXT NOT NULL,

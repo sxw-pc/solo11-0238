@@ -12,7 +12,8 @@ from .executor import execute
 
 def parse():
     parser = argparse.ArgumentParser(prog="python -m cloudctl")
-    parser.add_argument("subsystem", choices=("init", "policy", "agent", "drift", "demo", "report"))
+    parser.add_argument("subsystem", choices=("init", "policy", "agent", "drift", "rotation",
+                                               "demo", "report"))
     parser.add_argument("operation", nargs="?")
     parser.add_argument("--db", default="state.sqlite")
     parser.add_argument("--fixture", type=Path)

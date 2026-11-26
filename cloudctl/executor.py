@@ -1,11 +1,11 @@
 """Uniform command transaction, idempotency and durable evidence boundary."""
 
-from . import observe, policy, reconcile
+from . import observe, policy, reconcile, rotation_coordinator
 from .db import DecisionError, initialize, previous, record, transaction
 
 
 HANDLERS = {"policy": policy.HANDLERS, "agent": observe.HANDLERS,
-            "drift": reconcile.HANDLERS}
+            "drift": reconcile.HANDLERS, "rotation": rotation_coordinator.HANDLERS}
 
 
 def execute(connection, subsystem, operation, payload, request_id):

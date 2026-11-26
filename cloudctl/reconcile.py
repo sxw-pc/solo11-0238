@@ -1,5 +1,6 @@
 """Availability-bounded repair waves, receipts and observed convergence."""
 
+from . import rotation_coordinator
 from .db import decision, row, rows
 from .policy import target, rollback as rollback_policy
 
@@ -19,6 +20,11 @@ def plan(connection, payload):
         return decision("blocked", "another repair plan owns this service", plans=[x["id"] for x in in_flight])
     inventory = rows(connection, "SELECT * FROM inventories WHERE service=? AND namespace=? ORDER BY replica_id",
                      (service, policy["namespace"]))
+    # During a credential rotation, replicas isolated from traffic are not
+    # repair-availability units, and only the routing membership serves.
+    serving = set(rotation_coordinator.serving_members(connection, service, policy["namespace"]))
+    inventory = [replica for replica in inventory
+                 if not serving or replica["replica_id"] in serving]
     eligible = []
     for replica in inventory:
         desired = target(connection, replica)
@@ -81,8 +87,13 @@ def dispatch(connection, payload):
     same_wave = rows(connection, "SELECT id,status FROM actions WHERE plan_id=? AND wave=?",
                      (plan_row["id"], action["wave"]))
     active = sum(item["status"] == "dispatched" for item in same_wave)
-    healthy = row(connection, "SELECT COUNT(*) AS n FROM inventories WHERE service=? AND healthy=1",
-                  (plan_row["service"],))["n"]
+    healthy = rotation_coordinator.serving_healthy_count(
+        connection, plan_row["service"], policy["namespace"])
+    # A rotation in progress fences its routing membership: in-flight activation
+    # commands do not yet count as effective keys, and isolated replicas are
+    # outside the serving set.
+    healthy -= rotation_coordinator.frozen_serving_count(
+        connection, plan_row["service"], policy["namespace"])
     if healthy - active - 1 < plan_row["min_healthy"]:
         return decision("blocked", "dispatch would exceed unavailable replica budget",
                         healthy=healthy, active=active)

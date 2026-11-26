@@ -8,7 +8,8 @@ from .executor import execute
 
 
 TABLES = ("policies", "revisions", "retirements", "inventories", "observations",
-          "exceptions", "plans", "actions", "receipts")
+          "exceptions", "plans", "actions", "receipts", "rotations",
+          "rotation_commands", "key_trust_ledger", "activation_ledger", "routing_ledger")
 
 
 def report(connection):
