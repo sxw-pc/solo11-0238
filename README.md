@@ -46,4 +46,23 @@ python -m cloudctl report --db state.sqlite
 
 ## 首版边界
 
-本仓目前不处理跨集群策略层级继承、策略语义差异解释、Git 双向同步冲突、敏感配置轮换通道、自动修复风险预算、离线边缘节点回补、合规证据时间封卷、多租户策略委派与撤回。这些是产品后续范围，不代表已有实现。
+本仓目前不处理跨集群策略层级继承、策略语义差异解释、Git 双向同步冲突、敏感配置轮换通道、自动修复风险预算、离线边缘节点回补、多租户策略委派与撤回。这些是产品后续范围，不代表已有实现。
+
+## 合规时间封卷与选择性披露
+
+`compliance_capture.py` 固定保存 `{service,at}` 原件页与摘要；`compliance_seal.py` 在其上构建可复查的时间封卷，`verifier.py` 是不依赖平台数据库的本地独立验证器。
+
+- **因果闭包而非按 id/到达时间截断**：`seal window` 封存业务时间落在 `[start,end)` 的事件，并沿 `policy_id/replica_id/action_id/plan_id/dependencies` 引用做 BFS，把窗前草案、计划、派发等最小前置证明一并纳入。签卷时已知的事件前缀（`prefix_event_id`）显式落库。
+- **迟到证据只入附卷**：窗内采样、签卷后才入库的事件（如分钟 29 采样、41 入库）由 `seal attach` 绑定为独立附卷，附卷用锚点叶子回指原封卷根，原封卷的根摘要、窗口成员与命题永不改写。
+- **原件承诺与按权限证明**：所有叶子进入 Merkle 清单，根只取决于 `(key,digest)`。事件叶子对敏感字段使用占位承诺，监管员拿到明文并可逐字段核对值承诺，客户只拿到脱敏叶子与包含/不包含证明，双方复现**同一个根**；“按角色删字段再重新哈希”会因摘要不符被验证器拒绝。
+- **命题分离、不伪造收敛**：`receipt_applied_only`（仅回执）与 `independently_confirmed`（回执加后续独立观察）是不同命题；签卷时新观察未到，只出具 applied 并附确认断言的不包含证明。`reconcile.action_claims` 按证据前缀裁定，前缀外的确认不会被回溯。
+- **撤销与追补**：`seal revoke` 撤销见证密钥并签发撤销凭证，旧证书留档；`seal supplement` 针对附卷签发收敛升级凭证，客户补卷只含脱敏命题。
+- **健壮性**：同一 `(service,window)` 有唯一封卷身份，双人并发与崩溃重试都返回同一身份；重复页面幂等、同页冲突拒绝；`seal archive` 压缩叶子正文后清单根不变，已发出的证书仍可独立验证。`seal audit` 重放事件前缀并核对所有承诺，删行或改写会报 `diverged` 而不是误报 `consistent`。
+
+```powershell
+python -m cloudctl seal window  --db state.sqlite --input '{"service":"a","start":20,"end":30,"at":35}'
+python -m cloudctl seal attach  --db state.sqlite --input '{"seal_id":"seal:...","at":41}'
+python -m cloudctl seal certify --db state.sqlite --input '{"seal_id":"seal:...","audience":"cust","role":"customer"}'
+python -m cloudctl seal audit   --db state.sqlite
+python -m cloudctl verify --bundle cert.json --key <issuer-hex>
+```

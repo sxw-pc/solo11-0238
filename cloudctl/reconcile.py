@@ -1,7 +1,55 @@
 """Availability-bounded repair waves, receipts and observed convergence."""
 
+import json
+
 from .db import decision, row, rows
 from .policy import target, rollback as rollback_policy
+
+
+def action_claims(connection, service=None, prefix_event_id=None):
+    """Classify every dispatched command from durable evidence.
+
+    The two externally assertable states stay separate:
+      * ``independently_confirmed`` - an accepted receipt *and* a later
+        independent observation (the ``confirm`` command itself converged);
+      * ``receipt_applied_only`` - an accepted receipt with no confirming
+        observation inside the evidence prefix.
+
+    ``prefix_event_id`` restricts decisions to the events known at that point,
+    mirroring a sealed prefix; a later confirmation must not be back-dated.
+    """
+    action_rows = rows(connection, "SELECT a.*,p.service,p.created_at FROM actions a "
+                       "JOIN plans p ON p.id=a.plan_id ORDER BY a.id")
+    if service is not None:
+        action_rows = [item for item in action_rows if item["service"] == service]
+    cutoff = prefix_event_id
+    claims = []
+    for action in action_rows:
+        receipt = row(connection, "SELECT * FROM receipts WHERE action_id=? AND status='accepted'",
+                      (action["id"],))
+        confirm_event = None
+        if cutoff is not None:
+            confirm_event = row(
+                connection,
+                "SELECT id FROM events WHERE kind='drift.confirm' AND id<=? "
+                "AND input_json LIKE ? ORDER BY id",
+                (cutoff, f'%"action_id":"{action["id"]}"%'))
+        confirmed = action["status"] == "confirmed" and receipt and (
+            cutoff is None or confirm_event is not None)
+        if confirmed:
+            statement = "independently_confirmed"
+        elif receipt:
+            statement = "receipt_applied_only"
+        else:
+            statement = f"action_{action['status']}"
+        claims.append({
+            "action_id": action["id"], "service": action["service"],
+            "plan_id": action["plan_id"], "wave": action["wave"],
+            "status": action["status"], "statement": statement,
+            "receipt_id": receipt["id"] if receipt else None,
+            "receipt_observed_at": receipt["observed_at"] if receipt else None,
+        })
+    return claims
 
 
 def plan(connection, payload):
