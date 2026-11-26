@@ -7,8 +7,9 @@ from .db import canonical, initialize, rows
 from .executor import execute
 
 
-TABLES = ("policies", "revisions", "retirements", "inventories", "observations",
-          "exceptions", "plans", "actions", "receipts")
+TABLES = ("policies", "revisions", "retirements", "nodes", "inventories", "observations",
+          "exceptions", "effective_targets", "pins", "health_samples",
+          "plans", "actions", "receipts")
 
 
 def report(connection):
@@ -40,7 +41,14 @@ def report(connection):
         "mismatches": mismatches,
         "policies": rows(connection, "SELECT id,status,active_revision,generation FROM policies ORDER BY id"),
         "replicas": rows(connection, "SELECT replica_id,generation,drift,drift_reason FROM inventories ORDER BY replica_id"),
-        "plans": rows(connection, "SELECT id,status,target_revision,current_wave FROM plans ORDER BY id"),
+        "plans": rows(connection, "SELECT id,status,target_revision,current_wave,"
+                     "cluster,target_uid,target_digest FROM plans ORDER BY id"),
+        "hierarchy_nodes": rows(connection, "SELECT node,kind,name,parent,status "
+                                "FROM nodes ORDER BY node"),
+        "pins": rows(connection, "SELECT pin_id,cluster,service,target_uid,status,"
+                     "window_minutes FROM pins ORDER BY pin_id"),
+        "effective_targets": rows(connection, "SELECT target_uid,service,cluster,digest,"
+                                  "vector_json,pinned FROM effective_targets ORDER BY target_uid"),
         "recent_decisions": [
             {"id": event["id"], "kind": event["kind"], "subject": event["subject"],
              "result": json.loads(event["result_json"])} for event in events[-15:]

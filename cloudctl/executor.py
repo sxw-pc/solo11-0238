@@ -4,8 +4,18 @@ from . import observe, policy, reconcile
 from .db import DecisionError, initialize, previous, record, transaction
 
 
-HANDLERS = {"policy": policy.HANDLERS, "agent": observe.HANDLERS,
-            "drift": reconcile.HANDLERS}
+CLUSTER_HANDLERS = {**policy.HANDLERS, **reconcile.HANDLERS, **observe.HANDLERS}
+
+HANDLERS = {
+    "policy": policy.HANDLERS,
+    "agent": observe.HANDLERS,
+    "drift": reconcile.HANDLERS,
+    # Naming aliases for callers that group hierarchy/pin commands separately.
+    "hierarchy": policy.HANDLERS,
+    "cluster": CLUSTER_HANDLERS,
+    "config": policy.HANDLERS,
+    "reconcile": reconcile.HANDLERS,
+}
 
 
 def execute(connection, subsystem, operation, payload, request_id):
@@ -23,5 +33,7 @@ def execute(connection, subsystem, operation, payload, request_id):
         except (KeyError, TypeError) as error:
             raise DecisionError(f"invalid {subsystem}.{operation} input: {error}") from error
         return record(connection, request_id, f"{subsystem}.{operation}",
-                      str(payload.get("policy_id", payload.get("replica_id", payload.get("plan_id", "cluster")))),
+                      str(payload.get("policy_id", payload.get("replica_id",
+                      payload.get("plan_id", payload.get("pin_id",
+                      payload.get("cluster", "cluster")))))),
                       payload, result)

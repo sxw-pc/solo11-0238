@@ -1,0 +1,413 @@
+{
+  "name": "跨集群修订钉住与健康窗口释放",
+  "steps": [
+    {
+      "subsystem": "policy",
+      "operation": "create",
+      "request_id": "rb:p-create",
+      "payload": {
+        "policy_id": "p",
+        "layer": "org",
+        "scope": "svc",
+        "owner": "org-ops"
+      }
+    },
+    {
+      "subsystem": "policy",
+      "operation": "draft",
+      "request_id": "rb:p1-draft",
+      "payload": {
+        "policy_id": "p",
+        "revision": 1,
+        "value": {
+          "tls": "old",
+          "log": "info"
+        },
+        "dependencies": [],
+        "at": 1
+      }
+    },
+    {
+      "subsystem": "policy",
+      "operation": "publish",
+      "request_id": "rb:p1-pub",
+      "payload": {
+        "policy_id": "p",
+        "revision": 1
+      }
+    },
+    {
+      "subsystem": "policy",
+      "operation": "create",
+      "request_id": "rb:w-create",
+      "payload": {
+        "policy_id": "w",
+        "layer": "cluster",
+        "cluster": "west",
+        "scope": "svc",
+        "owner": "west-ops"
+      }
+    },
+    {
+      "subsystem": "policy",
+      "operation": "draft",
+      "request_id": "rb:w1-draft",
+      "payload": {
+        "policy_id": "w",
+        "revision": 1,
+        "value": {
+          "log": "warn"
+        },
+        "dependencies": [],
+        "at": 2
+      }
+    },
+    {
+      "subsystem": "policy",
+      "operation": "publish",
+      "request_id": "rb:w1-pub",
+      "payload": {
+        "policy_id": "w",
+        "revision": 1
+      }
+    },
+    {
+      "subsystem": "agent",
+      "operation": "register",
+      "request_id": "rb:reg-e1",
+      "payload": {
+        "replica_id": "e1",
+        "service": "svc",
+        "namespace": "prod",
+        "cluster": "east",
+        "generation": 1,
+        "healthy": true
+      }
+    },
+    {
+      "subsystem": "agent",
+      "operation": "observe",
+      "request_id": "rb:obs-e1",
+      "payload": {
+        "observation_id": "obs-e1-1",
+        "replica_id": "e1",
+        "generation": 1,
+        "observed_at": 5,
+        "received_at": 6,
+        "policy_id": "p",
+        "revision": 1,
+        "value": {
+          "tls": "old",
+          "log": "info"
+        },
+        "origin": "agent"
+      }
+    },
+    {
+      "subsystem": "agent",
+      "operation": "register",
+      "request_id": "rb:reg-e2",
+      "payload": {
+        "replica_id": "e2",
+        "service": "svc",
+        "namespace": "prod",
+        "cluster": "east",
+        "generation": 1,
+        "healthy": true
+      }
+    },
+    {
+      "subsystem": "agent",
+      "operation": "observe",
+      "request_id": "rb:obs-e2",
+      "payload": {
+        "observation_id": "obs-e2-1",
+        "replica_id": "e2",
+        "generation": 1,
+        "observed_at": 5,
+        "received_at": 6,
+        "policy_id": "p",
+        "revision": 1,
+        "value": {
+          "tls": "old",
+          "log": "info"
+        },
+        "origin": "agent"
+      }
+    },
+    {
+      "subsystem": "agent",
+      "operation": "register",
+      "request_id": "rb:reg-e3",
+      "payload": {
+        "replica_id": "e3",
+        "service": "svc",
+        "namespace": "prod",
+        "cluster": "east",
+        "generation": 1,
+        "healthy": true
+      }
+    },
+    {
+      "subsystem": "agent",
+      "operation": "observe",
+      "request_id": "rb:obs-e3",
+      "payload": {
+        "observation_id": "obs-e3-1",
+        "replica_id": "e3",
+        "generation": 1,
+        "observed_at": 5,
+        "received_at": 6,
+        "policy_id": "p",
+        "revision": 1,
+        "value": {
+          "tls": "old",
+          "log": "info"
+        },
+        "origin": "agent"
+      }
+    },
+    {
+      "subsystem": "agent",
+      "operation": "register",
+      "request_id": "rb:reg-w1",
+      "payload": {
+        "replica_id": "w1",
+        "service": "svc",
+        "namespace": "prod",
+        "cluster": "west",
+        "generation": 1,
+        "healthy": true
+      }
+    },
+    {
+      "subsystem": "agent",
+      "operation": "observe",
+      "request_id": "rb:obs-w1",
+      "payload": {
+        "observation_id": "obs-w1-1",
+        "replica_id": "w1",
+        "generation": 1,
+        "observed_at": 5,
+        "received_at": 6,
+        "policy_id": "p",
+        "revision": 1,
+        "value": {
+          "tls": "old",
+          "log": "warn"
+        },
+        "origin": "agent"
+      }
+    },
+    {
+      "subsystem": "agent",
+      "operation": "register",
+      "request_id": "rb:reg-w2",
+      "payload": {
+        "replica_id": "w2",
+        "service": "svc",
+        "namespace": "prod",
+        "cluster": "west",
+        "generation": 1,
+        "healthy": true
+      }
+    },
+    {
+      "subsystem": "agent",
+      "operation": "observe",
+      "request_id": "rb:obs-w2",
+      "payload": {
+        "observation_id": "obs-w2-1",
+        "replica_id": "w2",
+        "generation": 1,
+        "observed_at": 5,
+        "received_at": 6,
+        "policy_id": "p",
+        "revision": 1,
+        "value": {
+          "tls": "old",
+          "log": "warn"
+        },
+        "origin": "agent"
+      }
+    },
+    {
+      "subsystem": "agent",
+      "operation": "register",
+      "request_id": "rb:reg-w3",
+      "payload": {
+        "replica_id": "w3",
+        "service": "svc",
+        "namespace": "prod",
+        "cluster": "west",
+        "generation": 1,
+        "healthy": true
+      }
+    },
+    {
+      "subsystem": "agent",
+      "operation": "observe",
+      "request_id": "rb:obs-w3",
+      "payload": {
+        "observation_id": "obs-w3-1",
+        "replica_id": "w3",
+        "generation": 1,
+        "observed_at": 5,
+        "received_at": 6,
+        "policy_id": "p",
+        "revision": 1,
+        "value": {
+          "tls": "old",
+          "log": "warn"
+        },
+        "origin": "agent"
+      }
+    },
+    {
+      "subsystem": "policy",
+      "operation": "pin",
+      "request_id": "rb:pin-west",
+      "payload": {
+        "pin_id": "pin-west",
+        "cluster": "west",
+        "namespace": "prod",
+        "service": "svc",
+        "min_healthy": 2,
+        "window_minutes": 30,
+        "at": 6,
+        "approved_by": "ops-oncall",
+        "reason": "wait for west rolling window"
+      }
+    },
+    {
+      "subsystem": "policy",
+      "operation": "draft",
+      "request_id": "rb:p2-draft",
+      "payload": {
+        "policy_id": "p",
+        "revision": 2,
+        "value": {
+          "tls": "new",
+          "log": "info"
+        },
+        "dependencies": [],
+        "at": 10
+      }
+    },
+    {
+      "subsystem": "policy",
+      "operation": "publish",
+      "request_id": "rb:p2-pub",
+      "payload": {
+        "policy_id": "p",
+        "revision": 2
+      }
+    },
+    {
+      "subsystem": "policy",
+      "operation": "target",
+      "request_id": "rb:west-pinned",
+      "payload": {
+        "cluster": "west",
+        "namespace": "prod",
+        "service": "svc"
+      }
+    },
+    {
+      "subsystem": "drift",
+      "operation": "plan",
+      "request_id": "rb:noop-plan",
+      "payload": {
+        "plan_id": "west-pinned",
+        "policy_id": "p",
+        "service": "svc",
+        "cluster": "west",
+        "min_healthy": 2,
+        "at": 11
+      }
+    },
+    {
+      "subsystem": "policy",
+      "operation": "release_pin",
+      "request_id": "rb:release-early",
+      "payload": {
+        "pin_id": "pin-west",
+        "at": 12
+      }
+    },
+    {
+      "subsystem": "agent",
+      "operation": "health",
+      "request_id": "rb:health-0",
+      "payload": {
+        "sample_id": "h0",
+        "cluster": "west",
+        "namespace": "prod",
+        "service": "svc",
+        "at": 10,
+        "healthy_count": 3,
+        "total_count": 3,
+        "min_healthy": 2
+      }
+    },
+    {
+      "subsystem": "agent",
+      "operation": "health",
+      "request_id": "rb:health-40",
+      "payload": {
+        "sample_id": "h40",
+        "cluster": "west",
+        "namespace": "prod",
+        "service": "svc",
+        "at": 40,
+        "healthy_count": 3,
+        "total_count": 3,
+        "min_healthy": 2
+      }
+    },
+    {
+      "subsystem": "policy",
+      "operation": "release_pin",
+      "request_id": "rb:release",
+      "payload": {
+        "pin_id": "pin-west",
+        "at": 40
+      }
+    },
+    {
+      "subsystem": "drift",
+      "operation": "plan",
+      "request_id": "rb:plan-west",
+      "payload": {
+        "plan_id": "west-next",
+        "policy_id": "p",
+        "service": "svc",
+        "cluster": "west",
+        "min_healthy": 2,
+        "at": 41
+      }
+    },
+    {
+      "subsystem": "drift",
+      "operation": "schedule",
+      "request_id": "rb:schedule",
+      "payload": {
+        "plan_id": "west-next",
+        "wave_minutes": 10,
+        "window_minutes": 30,
+        "start_at": 41,
+        "window_origin": 10
+      }
+    },
+    {
+      "subsystem": "drift",
+      "operation": "preflight",
+      "request_id": "rb:preflight",
+      "payload": {
+        "cluster": "west",
+        "service": "svc",
+        "min_healthy": 2
+      }
+    }
+  ]
+}
