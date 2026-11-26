@@ -12,7 +12,9 @@ from .executor import execute
 
 def parse():
     parser = argparse.ArgumentParser(prog="python -m cloudctl")
-    parser.add_argument("subsystem", choices=("init", "policy", "agent", "drift", "demo", "report"))
+    parser.add_argument("subsystem", choices=("init", "policy", "agent", "drift", "topology",
+                                              "physical_topology", "link_topology", "link_probe",
+                                              "traffic", "failover", "switchover", "demo", "report"))
     parser.add_argument("operation", nargs="?")
     parser.add_argument("--db", default="state.sqlite")
     parser.add_argument("--fixture", type=Path)
@@ -66,7 +68,9 @@ def main():
                     raise DecisionError("request_id is required for one operation")
                 output = execute(connection, arguments.subsystem, arguments.operation, payload, str(request_id))
         print(json.dumps(output, ensure_ascii=False, indent=2, sort_keys=True))
-        return 2 if output.get("status") in ("rejected", "blocked", "paused") else 0
+        hard_business_status = ("rejected", "blocked", "paused", "failed",
+                                "stale_generation", "conflict", "partial")
+        return 2 if output.get("status") in hard_business_status else 0
     except (DecisionError, ValueError, KeyError, OSError) as error:
         print(json.dumps({"status": "invalid", "error": str(error)}, ensure_ascii=False), file=sys.stderr)
         return 1

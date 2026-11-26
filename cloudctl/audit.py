@@ -5,19 +5,27 @@ import sqlite3
 
 from .db import canonical, initialize, rows
 from .executor import execute
+from .traffic_switch import init_switch
 
 
 TABLES = ("policies", "revisions", "retirements", "inventories", "observations",
-          "exceptions", "plans", "actions", "receipts")
+          "exceptions", "plans", "actions", "receipts",
+          "pt_failure_domains", "pt_nodes", "pt_resources", "pt_ports",
+          "pt_equivalence", "pt_hypotheses", "pt_link_probes",
+          "ts_plans", "ts_customers", "ts_routes", "ts_reservations",
+          "ts_commands", "ts_receipts", "ts_probes", "ts_customer_links",
+          "ts_sla_certificates", "ts_audit")
 
 
 def report(connection):
     initialize(connection)
+    init_switch(connection)
     events = rows(connection, "SELECT * FROM events ORDER BY id")
     replay = sqlite3.connect(":memory:", isolation_level=None)
     replay.row_factory = sqlite3.Row
     replay.execute("PRAGMA foreign_keys=ON")
     initialize(replay)
+    init_switch(replay)
     mismatches = []
     for event in events:
         subsystem, operation = event["kind"].split(".", 1)
