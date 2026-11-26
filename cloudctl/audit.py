@@ -8,7 +8,11 @@ from .executor import execute
 
 
 TABLES = ("policies", "revisions", "retirements", "inventories", "observations",
-          "exceptions", "plans", "actions", "receipts")
+          "exceptions", "plans", "actions", "receipts",
+          "image_builds", "image_build_layers", "image_layers", "image_layer_evidence",
+          "image_origins", "image_signing_keys", "image_scanner_rules", "image_scans",
+          "image_permits", "image_orders", "image_nodes", "image_rollouts",
+          "image_rollout_nodes", "image_node_probes", "image_tag_history")
 
 
 def report(connection):

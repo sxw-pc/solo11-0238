@@ -62,8 +62,78 @@ CREATE TABLE IF NOT EXISTS events (
   kind TEXT NOT NULL, subject TEXT NOT NULL, input_json TEXT NOT NULL,
   result_json TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS image_builds (
+  build TEXT PRIMARY KEY, image TEXT NOT NULL, tag TEXT NOT NULL, digest TEXT NOT NULL,
+  source_commit TEXT NOT NULL, environment_digest TEXT NOT NULL,
+  signing_key TEXT NOT NULL, key_generation INTEGER NOT NULL,
+  builder TEXT NOT NULL, captured_at INTEGER NOT NULL, parent_build TEXT,
+  packet TEXT NOT NULL, packet_digest TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS image_build_layers (
+  build TEXT NOT NULL, layer TEXT NOT NULL, position INTEGER NOT NULL,
+  PRIMARY KEY(build, position)
+);
+CREATE TABLE IF NOT EXISTS image_layers (
+  digest TEXT PRIMARY KEY, kind TEXT NOT NULL, vuln_level TEXT NOT NULL DEFAULT 'none'
+);
+CREATE TABLE IF NOT EXISTS image_layer_evidence (
+  layer_digest TEXT NOT NULL, source_layer TEXT NOT NULL,
+  origin_id TEXT NOT NULL, evidence_id TEXT NOT NULL, recorded_at INTEGER NOT NULL,
+  retracted_at INTEGER, PRIMARY KEY(evidence_id)
+);
+CREATE TABLE IF NOT EXISTS image_origins (
+  origin_id TEXT PRIMARY KEY, description TEXT NOT NULL, trusted INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS image_signing_keys (
+  key_id TEXT NOT NULL, generation INTEGER NOT NULL, revoked_at INTEGER,
+  revoke_reason TEXT NOT NULL DEFAULT '', PRIMARY KEY(key_id, generation)
+);
+CREATE TABLE IF NOT EXISTS image_scanner_rules (
+  rule_id TEXT NOT NULL, scanner_version TEXT NOT NULL, layer_kind TEXT NOT NULL,
+  min_level TEXT NOT NULL, effective_at INTEGER NOT NULL, PRIMARY KEY(rule_id)
+);
+CREATE TABLE IF NOT EXISTS image_scans (
+  build TEXT NOT NULL, scanner_version TEXT NOT NULL, full_layer INTEGER NOT NULL,
+  target_digest TEXT NOT NULL, scanned_at INTEGER NOT NULL, PRIMARY KEY(build, scanner_version, full_layer)
+);
+CREATE TABLE IF NOT EXISTS image_permits (
+  permit_id TEXT PRIMARY KEY, image TEXT NOT NULL, tag TEXT NOT NULL,
+  build TEXT NOT NULL, digest TEXT NOT NULL, status TEXT NOT NULL, reason TEXT NOT NULL,
+  decided_at INTEGER NOT NULL, evidence_json TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS image_orders (
+  order_id TEXT PRIMARY KEY, image TEXT NOT NULL, digest TEXT NOT NULL,
+  order_type TEXT NOT NULL, reason TEXT NOT NULL, issued_at INTEGER NOT NULL,
+  related_permit TEXT
+);
+CREATE TABLE IF NOT EXISTS image_nodes (
+  node_id TEXT PRIMARY KEY, service TEXT NOT NULL, healthy INTEGER NOT NULL,
+  running_digest TEXT NOT NULL, running_build TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS image_rollouts (
+  rollout_id TEXT PRIMARY KEY, image TEXT NOT NULL, target_digest TEXT NOT NULL,
+  fallback_digest TEXT NOT NULL, min_healthy INTEGER NOT NULL,
+  status TEXT NOT NULL, created_at INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS image_rollout_nodes (
+  rollout_id TEXT NOT NULL, node_id TEXT NOT NULL, wave INTEGER NOT NULL,
+  switch_status TEXT NOT NULL DEFAULT 'planned', digest_at_dispatch TEXT,
+  PRIMARY KEY(rollout_id, node_id)
+);
+CREATE TABLE IF NOT EXISTS image_node_probes (
+  probe_id TEXT PRIMARY KEY, node_id TEXT NOT NULL, service TEXT NOT NULL,
+  digest TEXT NOT NULL, healthy INTEGER NOT NULL, probed_at INTEGER NOT NULL,
+  independent INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS image_tag_history (
+  image TEXT NOT NULL, tag TEXT NOT NULL, digest TEXT NOT NULL,
+  changed_at INTEGER NOT NULL, reason TEXT NOT NULL, PRIMARY KEY(image, tag, changed_at)
+);
 CREATE INDEX IF NOT EXISTS idx_observations_replica ON observations(replica_id,observed_at);
 CREATE INDEX IF NOT EXISTS idx_actions_plan ON actions(plan_id,wave);
+CREATE INDEX IF NOT EXISTS idx_layer_evidence ON image_layer_evidence(layer_digest);
+CREATE INDEX IF NOT EXISTS idx_build_layers ON image_build_layers(build,position);
+CREATE INDEX IF NOT EXISTS idx_rollout_nodes ON image_rollout_nodes(rollout_id,wave);
 """
 
 

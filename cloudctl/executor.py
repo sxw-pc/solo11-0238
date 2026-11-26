@@ -1,11 +1,12 @@
 """Uniform command transaction, idempotency and durable evidence boundary."""
 
-from . import observe, policy, reconcile
+from . import image_permit, image_provenance, image_rollout, observe, policy, reconcile
 from .db import DecisionError, initialize, previous, record, transaction
 
 
 HANDLERS = {"policy": policy.HANDLERS, "agent": observe.HANDLERS,
-            "drift": reconcile.HANDLERS}
+            "drift": reconcile.HANDLERS, "image": image_provenance.HANDLERS,
+            "permit": image_permit.HANDLERS, "rollout": image_rollout.HANDLERS}
 
 
 def execute(connection, subsystem, operation, payload, request_id):
